@@ -120,18 +120,60 @@ export default function App() {
     const [activeSection, setActiveSection] = useState('home');
 
     const [bookingData, setBookingData] = useState({
-        pcType: 'standard',
+        name: '',
+        phone: '',
+        pcType: 'pc_weekday',
         hours: 1,
-        date: new Date().toISOString().slice(0, 16)
+        date: new Date().toISOString().slice(0, 16),
+        comment: '',
     });
 
+    const [bookingResult, setBookingResult] = useState(null);
+    const [bookingLoading, setBookingLoading] = useState(false);
+
     const prices = {
-        standard: 100,  // PC будни 1ч
-        vip: 120,       // PC выходные 1ч
-        booth: 150,     // PS5 1ч
+        pc_weekday: 100,
+        pc_weekend: 120,
+        ps5_one: 150,
+        ps5_two: 200,
     };
 
-    const totalCost = prices[bookingData.pcType] * bookingData.hours;
+    const totalCost = (prices[bookingData.pcType] || 0) * bookingData.hours;
+
+    const submitBooking = async () => {
+        try {
+            setBookingLoading(true);
+            setBookingResult(null);
+
+            const response = await fetch('http://127.0.0.1:8000/api/bookings/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: bookingData.name,
+                    phone: bookingData.phone,
+                    pc_type: bookingData.pcType,
+                    start_at: bookingData.date,
+                    hours: bookingData.hours,
+                    comment: bookingData.comment,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setBookingResult(data);
+            } else {
+                alert(data.error || 'Ошибка при создании бронирования');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Ошибка соединения с сервером');
+        } finally {
+            setBookingLoading(false);
+        }
+    };
 
     const scrollToSection = (id) => {
         const element = document.getElementById(id);
@@ -299,7 +341,9 @@ export default function App() {
                     <div
                         className="max-w-4xl mx-auto bg-[#1a1a1e] border border-gray-800 rounded-3xl p-8 md:p-12 shadow-2xl">
                         <div className="text-center mb-10">
-                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Забронировать место</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                                Забронировать место
+                            </h2>
                             <div
                                 className="w-20 h-1 bg-gradient-to-r from-cyan-500 to-purple-500 mx-auto rounded-full"/>
                         </div>
@@ -307,19 +351,47 @@ export default function App() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-2">Тип компьютера</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {['standard', 'vip', 'booth'].map((type) => (
+                                    <label className="block text-gray-400 text-sm mb-2">Имя</label>
+                                    <input
+                                        type="text"
+                                        value={bookingData.name}
+                                        onChange={(e) => setBookingData({...bookingData, name: e.target.value})}
+                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                                        placeholder="Введите имя"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-gray-400 text-sm mb-2">Телефон</label>
+                                    <input
+                                        type="text"
+                                        value={bookingData.phone}
+                                        onChange={(e) => setBookingData({...bookingData, phone: e.target.value})}
+                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                                        placeholder="+7 (999) 123-45-67"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-gray-400 text-sm mb-2">Тип места</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[
+                                            {key: 'pc_weekday', label: 'PC (будни)'},
+                                            {key: 'pc_weekend', label: 'PC (вых.)'},
+                                            {key: 'ps5_one', label: 'PS5 (1 игрок)'},
+                                            {key: 'ps5_two', label: 'PS5 (2 игрока)'},
+                                        ].map((type) => (
                                             <button
-                                                key={type}
-                                                onClick={() => setBookingData({...bookingData, pcType: type})}
+                                                type="button"
+                                                key={type.key}
+                                                onClick={() => setBookingData({...bookingData, pcType: type.key})}
                                                 className={`py-3 rounded-lg text-sm font-bold border transition-all ${
-                                                    bookingData.pcType === type
+                                                    bookingData.pcType === type.key
                                                         ? 'bg-cyan-500/10 border-cyan-500 text-cyan-400'
                                                         : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
                                                 }`}
                                             >
-                                                {type === 'standard' ? 'PC (будни)' : type === 'vip' ? 'PC (вых.)' : 'PS5'}
+                                                {type.label}
                                             </button>
                                         ))}
                                     </div>
@@ -330,8 +402,8 @@ export default function App() {
                                     <input
                                         type="datetime-local"
                                         value={bookingData.date}
-                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
                                         onChange={(e) => setBookingData({...bookingData, date: e.target.value})}
+                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
                                     />
                                 </div>
 
@@ -345,10 +417,12 @@ export default function App() {
                                         min="1"
                                         max="12"
                                         value={bookingData.hours}
-                                        onChange={(e) => setBookingData({
-                                            ...bookingData,
-                                            hours: parseInt(e.target.value)
-                                        })}
+                                        onChange={(e) =>
+                                            setBookingData({
+                                                ...bookingData,
+                                                hours: parseInt(e.target.value),
+                                            })
+                                        }
                                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                                     />
                                     <div className="flex justify-between text-xs text-gray-500 mt-2">
@@ -357,37 +431,94 @@ export default function App() {
                                         <span>12ч</span>
                                     </div>
                                 </div>
+
+                                <div>
+                                    <label className="block text-gray-400 text-sm mb-2">Комментарий</label>
+                                    <textarea
+                                        value={bookingData.comment}
+                                        onChange={(e) => setBookingData({...bookingData, comment: e.target.value})}
+                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors min-h-[110px]"
+                                        placeholder="Например: хочу PS5 FIFA / буду с другом / перезвоните мне"
+                                    />
+                                </div>
                             </div>
 
                             <div
                                 className="bg-gray-900/50 rounded-2xl p-6 border border-gray-800 flex flex-col justify-between">
                                 <div>
                                     <h3 className="text-xl font-bold text-white mb-6">Итого</h3>
+
                                     <div className="space-y-4 text-sm text-gray-400">
                                         <div className="flex justify-between">
-                                            <span>Тариф</span>
-                                            <span className="text-white capitalize">{bookingData.pcType}</span>
+                                            <span>Клиент</span>
+                                            <span className="text-white">{bookingData.name || '—'}</span>
                                         </div>
+
+                                        <div className="flex justify-between">
+                                            <span>Телефон</span>
+                                            <span className="text-white">{bookingData.phone || '—'}</span>
+                                        </div>
+
+                                        <div className="flex justify-between">
+                                            <span>Тариф</span>
+                                            <span className="text-white">
+                              {{
+                                  pc_weekday: 'PC (будни)',
+                                  pc_weekend: 'PC (выходные)',
+                                  ps5_one: 'PS5 (1 игрок)',
+                                  ps5_two: 'PS5 (2 игрока)',
+                              }[bookingData.pcType]}
+                            </span>
+                                        </div>
+
                                         <div className="flex justify-between">
                                             <span>Время</span>
                                             <span className="text-white">{bookingData.hours} часов</span>
                                         </div>
+
                                         <div className="flex justify-between">
                                             <span>Налог</span>
                                             <span className="text-white">0₽</span>
                                         </div>
+
                                         <div className="h-px bg-gray-800 my-4"/>
+
                                         <div className="flex justify-between text-lg font-bold">
                                             <span className="text-cyan-400">К оплате</span>
                                             <span className="text-white">{totalCost}₽</span>
                                         </div>
                                     </div>
                                 </div>
-                                <button
-                                    className="w-full mt-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all flex items-center justify-center gap-2 group">
-                                    Оплатить и занять место
-                                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform"/>
-                                </button>
+
+                                <div>
+                                    <button
+                                        type="button"
+                                        onClick={submitBooking}
+                                        disabled={bookingLoading}
+                                        className="w-full mt-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-60"
+                                    >
+                                        {bookingLoading ? 'Отправка...' : 'Забронировать'}
+                                        <ChevronRight
+                                            className="w-5 h-5 group-hover:translate-x-1 transition-transform"/>
+                                    </button>
+
+                                    {bookingResult && (
+                                        <div className="mt-6 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-5">
+                                            <p className="text-sm text-gray-400 mb-2">Бронирование создано</p>
+                                            <p className="text-2xl font-black text-cyan-400 mb-3">
+                                                № {bookingResult.booking_number}
+                                            </p>
+                                                <a
+                                                  href={`http://localhost:5173/booking/${bookingResult.booking_number}`}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-sm text-white underline hover:text-cyan-300"
+                                                >
+                                                  Открыть информацию о бронировании
+                                                </a>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -553,59 +684,60 @@ export default function App() {
             </section>
 
             <section id="games" className="py-20 bg-[#131316]">
-              <div className="container mx-auto px-4">
-                <div className="flex justify-between items-end mb-12">
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Игры клуба</h2>
-                    <p className="text-gray-400">
-                      Популярные игры, доступные в RP ARENA
-                    </p>
-                  </div>
-                  <Link
-                    to="/games"
-                    className="hidden md:flex items-center text-cyan-400 hover:text-cyan-300 transition-colors font-bold"
-                  >
-                    Весь список
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {games
-                    .filter((game) => game.category === 'online') // только онлайн‑игры
-                    .slice(0, 8)
-                    .map((game) => (
-                      <div
-                        key={game.id}
-                        className="relative group overflow-hidden rounded-xl bg-gradient-to-b from-[#17171a] to-[#0f0f11] border border-gray-800 cursor-pointer"
-                      >
-                        <div className="p-4 flex flex-col justify-between h-full">
-                          <div>
-                            <p className="text-xs uppercase text-gray-500 mb-1">
-                              {game.genre}
+                <div className="container mx-auto px-4">
+                    <div className="flex justify-between items-end mb-12">
+                        <div>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Игры клуба</h2>
+                            <p className="text-gray-400">
+                                Популярные игры, доступные в RP ARENA
                             </p>
-                            <h3 className="text-white font-bold text-lg">
-                              {game.title}
-                            </h3>
-                          </div>
-                          {game.clubAccount && (
-                            <span className="mt-3 inline-flex text-[10px] px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 uppercase tracking-wide">
+                        </div>
+                        <Link
+                            to="/games"
+                            className="hidden md:flex items-center text-cyan-400 hover:text-cyan-300 transition-colors font-bold"
+                        >
+                            Весь список
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {games
+                            .filter((game) => game.category === 'online') // только онлайн‑игры
+                            .slice(0, 8)
+                            .map((game) => (
+                                <div
+                                    key={game.id}
+                                    className="relative group overflow-hidden rounded-xl bg-gradient-to-b from-[#17171a] to-[#0f0f11] border border-gray-800 cursor-pointer"
+                                >
+                                    <div className="p-4 flex flex-col justify-between h-full">
+                                        <div>
+                                            <p className="text-xs uppercase text-gray-500 mb-1">
+                                                {game.genre}
+                                            </p>
+                                            <h3 className="text-white font-bold text-lg">
+                                                {game.title}
+                                            </h3>
+                                        </div>
+                                        {game.clubAccount && (
+                                            <span
+                                                className="mt-3 inline-flex text-[10px] px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 uppercase tracking-wide">
                               Клубный аккаунт
                             </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
 
-                <div className="mt-8 flex justify-center md:hidden">
-                  <Link
-                    to="/games"
-                    className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl"
-                  >
-                    Смотреть все игры
-                  </Link>
+                    <div className="mt-8 flex justify-center md:hidden">
+                        <Link
+                            to="/games"
+                            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl"
+                        >
+                            Смотреть все игры
+                        </Link>
+                    </div>
                 </div>
-              </div>
             </section>
 
             <section className="py-20 bg-[#0f0f11] border-t border-gray-800">
