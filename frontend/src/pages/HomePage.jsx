@@ -141,38 +141,39 @@ export default function App() {
     const totalCost = (prices[bookingData.pcType] || 0) * bookingData.hours;
 
     const submitBooking = async () => {
-        try {
-            setBookingLoading(true);
-            setBookingResult(null);
+      try {
+        setBookingLoading(true);
+        setBookingResult(null);
 
-            const response = await fetch('http://127.0.0.1:8000/api/bookings/create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: bookingData.name,
-                    phone: bookingData.phone,
-                    pc_type: bookingData.pcType,
-                    start_at: bookingData.date,
-                    hours: bookingData.hours,
-                    comment: bookingData.comment,
-                }),
-            });
+        const response = await fetch('http://127.0.0.1:8000/api/bookings/create/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: bookingData.name,
+            phone: bookingData.phone,
+            pc_type: bookingData.pcType,
+            start_at: bookingData.date,
+            hours: bookingData.hours,
+            comment: bookingData.comment,
+          }),
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (data.success) {
-                setBookingResult(data);
-            } else {
-                alert(data.error || 'Ошибка при создании бронирования');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Ошибка соединения с сервером');
-        } finally {
-            setBookingLoading(false);
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Ошибка при создании бронирования');
         }
+
+        window.location.href =
+          `http://localhost:5173/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`;
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Ошибка соединения с сервером');
+      } finally {
+        setBookingLoading(false);
+      }
     };
 
     const scrollToSection = (id) => {
