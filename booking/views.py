@@ -41,7 +41,6 @@ def _messages_payload(ticket):
         for msg in ticket.messages.all().order_by('created_at')
     ]
 
-
 @csrf_exempt
 def create_booking(request):
     if request.method != 'POST':

@@ -19,7 +19,6 @@ import {Link} from 'react-router-dom';
 import {games} from '../data/games';
 
 // --- Components ---
-
 const HexagonIcon = ({children, className = ""}) => (
     <div
         className={`relative flex items-center justify-center w-20 h-20 transition-transform duration-300 group-hover:scale-110 ${className}`}>
@@ -130,6 +129,7 @@ export default function App() {
 
     const [bookingResult, setBookingResult] = useState(null);
     const [bookingLoading, setBookingLoading] = useState(false);
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
     const prices = {
         pc_weekday: 100,
@@ -141,39 +141,46 @@ export default function App() {
     const totalCost = (prices[bookingData.pcType] || 0) * bookingData.hours;
 
     const submitBooking = async () => {
-      try {
-        setBookingLoading(true);
-        setBookingResult(null);
-
-        const response = await fetch('http://127.0.0.1:8000/api/bookings/create/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: bookingData.name,
-            phone: bookingData.phone,
-            pc_type: bookingData.pcType,
-            start_at: bookingData.date,
-            hours: bookingData.hours,
-            comment: bookingData.comment,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Ошибка при создании бронирования');
+        if (!privacyAccepted) {
+            alert('Для продолжения необходимо согласиться с политикой конфиденциальности');
+            return;
         }
 
-        window.location.href =
-          `http://localhost:5173/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`;
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Ошибка соединения с сервером');
-      } finally {
-        setBookingLoading(false);
-      }
+        try {
+            setBookingLoading(true);
+            setBookingResult(null);
+
+            const response = await fetch('http://127.0.0.1:8000/api/bookings/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: bookingData.name,
+                    phone: bookingData.phone,
+                    pc_type: bookingData.pcType,
+                    start_at: bookingData.date,
+                    hours: bookingData.hours,
+                    comment: bookingData.comment,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Ошибка при создании бронирования');
+            }
+
+            setBookingResult(data);
+
+            window.location.href =
+                `http://localhost:5173/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`;
+        } catch (error) {
+            console.error(error);
+            alert(error.message || 'Ошибка соединения с сервером');
+        } finally {
+            setBookingLoading(false);
+        }
     };
 
     const scrollToSection = (id) => {
@@ -441,6 +448,22 @@ export default function App() {
                                         className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors min-h-[110px]"
                                         placeholder="Например: хочу PS5 FIFA / буду с другом / перезвоните мне"
                                     />
+                                </div>
+                                <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-4">
+                                    <label className="flex items-start gap-3 text-sm text-gray-400 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={privacyAccepted}
+                                            onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                                            className="mt-1 h-4 w-4 accent-cyan-500"
+                                        />
+                                        <span>
+                                            Я соглашаюсь на обработку персональных данных и принимаю{' '}
+                                            <Link to="/privacy" className="text-cyan-400 underline hover:text-cyan-300">
+                                                политику конфиденциальности
+                                            </Link>.
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -860,9 +883,10 @@ export default function App() {
                     <div
                         className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
                         <p>© 2026 RP ARENA. Все права защищены.</p>
-                        <div className="flex gap-6">
-                            <a href="#" className="hover:text-white transition-colors">Политика конфиденциальности</a>
-                            <a href="#" className="hover:text-white transition-colors">Публичная оферта</a>
+                        <div className="flex items-center gap-4">
+                                  <Link to="/privacy" className="hover:text-white underline">
+                                    Политика конфиденциальности
+                                  </Link>
                         </div>
                     </div>
                 </div>
