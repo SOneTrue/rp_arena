@@ -15,7 +15,7 @@ export default function SupportWidget({ bookingNumber, token }) {
       setError('');
 
       const response = await fetch(
-        `http://localhost:5173/api/bookings/${bookingNumber}/support/?token=${encodeURIComponent(token)}`
+        `${API_BASE}/api/bookings/${bookingNumber}/support/?token=${encodeURIComponent(token)}`
       );
 
       const data = await response.json();
