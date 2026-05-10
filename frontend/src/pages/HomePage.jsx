@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {games} from '../data/games';
-import { API_BASE } from '../config';
+import {API_BASE} from '../config';
 
 // --- Components ---
 const HexagonIcon = ({children, className = ""}) => (
@@ -174,8 +174,7 @@ export default function App() {
 
             setBookingResult(data);
 
-            window.location.href =
-                `${API_BASE}/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`;
+            window.location.href = `/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`;
         } catch (error) {
             console.error(error);
             alert(error.message || 'Ошибка соединения с сервером');
@@ -533,14 +532,14 @@ export default function App() {
                                             <p className="text-2xl font-black text-cyan-400 mb-3">
                                                 № {bookingResult.booking_number}
                                             </p>
-                                                <a
-                                                  href={`http://localhost:5173/booking/${bookingResult.booking_number}`}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="text-sm text-white underline hover:text-cyan-300"
-                                                >
-                                                  Открыть информацию о бронировании
-                                                </a>
+                                            <a
+                                                href={`${API_BASE}/booking/${bookingResult.booking_number}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-white underline hover:text-cyan-300"
+                                            >
+                                                Открыть информацию о бронировании
+                                            </a>
                                         </div>
                                     )}
                                 </div>
@@ -885,9 +884,9 @@ export default function App() {
                         className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
                         <p>© 2026 RP ARENA. Все права защищены.</p>
                         <div className="flex items-center gap-4">
-                                  <Link to="/privacy" className="hover:text-white underline">
-                                    Политика конфиденциальности
-                                  </Link>
+                            <Link to="/privacy" className="hover:text-white underline">
+                                Политика конфиденциальности
+                            </Link>
                         </div>
                     </div>
                 </div>
