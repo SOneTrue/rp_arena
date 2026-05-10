@@ -150,7 +150,7 @@ export default function App() {
             setBookingLoading(true);
             setBookingResult(null);
 
-            const response = await fetch('http://127.0.0.1:8000/api/bookings/create/', {
+            const response = await fetch('http://localhost:5173/api/bookings/create/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

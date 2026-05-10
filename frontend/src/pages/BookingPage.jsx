@@ -19,7 +19,7 @@ export default function BookingPage() {
         }
 
         const response = await fetch(
-          `http://127.0.0.1:8000/api/bookings/${bookingNumber}/?token=${encodeURIComponent(token)}`
+          `http://localhost:5173/api/bookings/${bookingNumber}/?token=${encodeURIComponent(token)}`
         );
 
         const data = await response.json();
