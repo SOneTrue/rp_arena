@@ -1,26 +1,25 @@
-version: "3.9"
-
 services:
   backend:
     build:
-      context: ./backend
-    container_name: rparena_backend
+      context: .
+      dockerfile: Dockerfile
+    container_name: tarasov_backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - sqlite_data:/app/data
-    restart: unless-stopped
+      - static_volume:/app/staticfiles
 
   frontend:
     build:
       context: ./frontend
-    container_name: rparena_frontend
+      dockerfile: Dockerfile
+    container_name: tarasov_frontend
+    restart: unless-stopped
     ports:
       - "80:80"
-    restart: unless-stopped
     depends_on:
       - backend
 
 volumes:
-  sqlite_data:
+  static_volume:
