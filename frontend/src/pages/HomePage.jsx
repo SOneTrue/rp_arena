@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {games} from '../data/games';
+import { API_BASE } from '../config';
 
 // --- Components ---
 const HexagonIcon = ({children, className = ""}) => (
@@ -150,7 +151,7 @@ export default function App() {
             setBookingLoading(true);
             setBookingResult(null);
 
-            const response = await fetch('http://localhost:5173/api/bookings/create/', {
+            const response = await fetch(`${API_BASE}/api/bookings/create/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

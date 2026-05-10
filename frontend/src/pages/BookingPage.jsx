@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import SupportWidget from '../components/SupportWidget';
+import { API_BASE } from '../config';
 
 export default function BookingPage() {
   const { bookingNumber } = useParams();
@@ -19,7 +20,7 @@ export default function BookingPage() {
         }
 
         const response = await fetch(
-          `http://localhost:5173/api/bookings/${bookingNumber}/?token=${encodeURIComponent(token)}`
+          `${API_BASE}/api/bookings/${bookingNumber}/?token=${encodeURIComponent(token)}`
         );
 
         const data = await response.json();

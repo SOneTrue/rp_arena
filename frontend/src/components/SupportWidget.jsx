@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { API_BASE } from '../config';
 
 export default function SupportWidget({ bookingNumber, token }) {
   const [open, setOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function SupportWidget({ bookingNumber, token }) {
       setError('');
 
       const response = await fetch(
-        `http://localhost:5173/api/bookings/${bookingNumber}/support/send/?token=${encodeURIComponent(token)}`,
+        `${API_BASE}/api/bookings/${bookingNumber}/support/send/?token=${encodeURIComponent(token)}`,
         {
           method: 'POST',
           headers: {
