@@ -174,7 +174,7 @@ export default function App() {
 
             setBookingResult(data);
 
-            window.location.href = `/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`;
+            window.location.href = `/booking/${data.booking_number}?token=${encodeURIComponent(data.access_token)}`
         } catch (error) {
             console.error(error);
             alert(error.message || 'Ошибка соединения с сервером');
